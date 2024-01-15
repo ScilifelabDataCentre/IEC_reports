@@ -1,0 +1,11 @@
+# Local development
+*~
+__pycache__
+\#*
+.DS_Store
+.vscode
+Pdfs
+Plots
+Data
+Parsed_data
+backup
