@@ -143,3 +143,14 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+
+# additional folders to ignore
+
+# Local development
+.vscode
+Pdfs
+Plots
+Data
+Parsed_data
+backup
