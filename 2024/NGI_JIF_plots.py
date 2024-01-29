@@ -2,6 +2,11 @@
 
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
+import os
+from colour_science_2023 import (
+    SCILIFE_COLOURS,
+)
 
 # infrastructure data - JIF
 from AIS_JIF_data_prep_inf import (
@@ -13,27 +18,54 @@ from AIS_JIF_data_prep_inf import (
 # can use general JIF data already prepared and QCed for the general infrastructure matching (already imported above)
 # We need to match to individual records to get the individual NGI technologies
 
+# Limit the data from JIF matching to only years we need
+# no need to limit by units as they aren't individual until matched to individual extractions
+
+pubs_jif_ais_info = pubs_jif_ais_info[
+    (pubs_jif_ais_info["Year"] > 2021) & (pubs_jif_ais_info["Year"] < 2024)
+]
+
+# get only columns needed for JIF data (for matching to individ labels)
+
+pubs_jif_ais_info_sub = pubs_jif_ais_info[["IUID", "JIF_category"]]
+
+# Now work with individual labels to limit them
+
 Pubs_cat_raw = pd.read_excel(
-    "Data/infrastructure_pubs_indivlabel_230607_op.xlsx",
+    "Data/infra_publications_individlabels_20240117.xlsx",
     sheet_name="Publications",
     header=0,
     engine="openpyxl",
     keep_default_na=False,
 )
 
-Pubs_cat_raw["Title"] = Pubs_cat_raw["Title"].str.lower()
+# Limit individual data to show ONLY years and units we want
 
-# get only columns needed for JIF data
+Pubs_cat_raw = Pubs_cat_raw.loc[
+    Pubs_cat_raw["Labels"].isin(
+        [
+            "NGI Long read",
+            "NGI Proteomics",
+            "NGI Short read",
+            "NGI Single cell",
+            "NGI SNP genotyping",
+            "NGI Spatial omics",
+            "NGI Other",
+        ]
+    )
+]
 
-pubs_jif_ais_info_sub = pubs_jif_ais_info[["Title", "JIF_category"]]
+Pubs_cat_raw = Pubs_cat_raw[
+    (Pubs_cat_raw["Year"] > 2021) & (Pubs_cat_raw["Year"] < 2024)
+]
 
-# match on title
+# match on IUID to get JIF categories by individual unit
 
 match_JIF_seplabs = pd.merge(
     Pubs_cat_raw,
     pubs_jif_ais_info_sub,
     how="left",
-    on="Title",
+    on="IUID",
 )
 
 
@@ -46,26 +78,11 @@ JIF_data.drop(
     JIF_data[JIF_data["Qualifiers"] == "Technology development"].index, inplace=True
 )
 
-JIF_data = JIF_data.groupby(["Year", "Labels", "JIFcat"]).size().reset_index()
-JIF_data.columns = ["Year", "Unit", "JIFcat", "Count"]
+JIF_data = JIF_data.groupby(["Year", "Labels", "JIF_category"]).size().reset_index()
+JIF_data.columns = ["Year", "Unit", "JIF_category", "Count"]
 
 # # # As a check, can check that the data aligns with what is expected
-##JIF_data.to_excel("Check_JIFdata_June23.xlsx")
-
-# only want certain NGI technologies for 2022 & 2023
-NGI_tech_2022 = JIF_data.loc[JIF_data["Year"].isin(["2022", "2023"])]
-NGI_tech_JIF = NGI_tech_2022.loc[
-    NGI_tech_2022["Unit"].isin(
-        [
-            "NGI Long read",
-            "NGI Proteomics",
-            "NGI Short read",
-            "NGI Single cell",
-            "NGI SNP genotyping",
-            "NGI Spatial omics",
-        ]
-    )
-]
+JIF_data.to_excel("NGI_check_JIF_data.xlsx")
 
 # Now need to create the individual plots for each unit
 
@@ -73,11 +90,11 @@ NGI_tech_JIF = NGI_tech_2022.loc[
 def JIF_graph_func(input):
     JIFcounts = input
     # split down dataframes to enable stacking
-    UnknownJIF = JIFcounts[(JIFcounts["JIFcat"] == "JIF unknown")]
-    Undersix = JIFcounts[(JIFcounts["JIFcat"] == "JIF <6")]
-    sixtonine = JIFcounts[(JIFcounts["JIFcat"] == "JIF 6-9")]
-    ninetotwentyfive = JIFcounts[(JIFcounts["JIFcat"] == "JIF 9-25")]
-    overtwentyfive = JIFcounts[(JIFcounts["JIFcat"] == "JIF >25")]
+    UnknownJIF = JIFcounts[(JIFcounts["JIF_category"] == "JIF unknown")]
+    Undersix = JIFcounts[(JIFcounts["JIF_category"] == "JIF <6")]
+    sixtonine = JIFcounts[(JIFcounts["JIF_category"] == "JIF 6-9")]
+    ninetotwentyfive = JIFcounts[(JIFcounts["JIF_category"] == "JIF 9-25")]
+    overtwentyfive = JIFcounts[(JIFcounts["JIF_category"] == "JIF >25")]
     # Make stacked bar chart
     fig = go.Figure(
         data=[

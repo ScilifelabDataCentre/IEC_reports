@@ -6,14 +6,14 @@ import numpy as np
 # Load publications data
 
 publications = pd.read_excel(
-    "Data/2023/SciLifeLab_publications_Infrastucture_2023.xlsx",  # extract from publications database
-    sheet_name="Publications 20231204-1239",
+    "Data/infra_publications_20240117.xlsx",  # extract from publications database
+    sheet_name="Publications",
     header=0,
     engine="openpyxl",
     keep_default_na=False,
 )
 
-# Need to filter raw pubs (2013-23 for annual report 2023)
+# Need to filter raw pubs (2018-23 for report 2023)
 
 publications = publications[
     (publications["Year"] > 2017) & (publications["Year"] < 2024)
@@ -22,7 +22,7 @@ publications = publications[
 # Load journal info data
 
 journal_info = pd.read_excel(
-    "Data/2023/JCR_JournalResults_2023_MB_neat.xlsx",
+    "Data/JCR_JournalResults_2023_MB_neat.xlsx",
     sheet_name="AIS_2",
     header=0,
     engine="openpyxl",
@@ -56,6 +56,7 @@ pubs_jif_ais_info = pd.merge(
     right_on="ISSN",
 )
 pubs_jif_ais_info = pubs_jif_ais_info.replace("N/A", np.nan)
+pubs_jif_ais_info = pubs_jif_ais_info.replace("NA", np.nan)
 pubs_jif_ais_info["JIF Without Self Cites"] = pd.to_numeric(
     pubs_jif_ais_info["JIF Without Self Cites"].fillna(-1)
 )
@@ -64,6 +65,8 @@ pubs_jif_ais_info["Article Influence Score"] = pd.to_numeric(
 )
 
 #### Need to have a manual write out file in order to check it and improve matching
+
+# pubs_jif_ais_info.to_excel("Check_me_Jan24_alltogether.xlsx")
 
 # Create a category column for JIF and AIS based on their values
 

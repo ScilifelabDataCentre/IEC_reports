@@ -16,18 +16,6 @@ from AIS_JIF_data_prep_inf import infpubs_jif_count
 # infrastructure data - AIS
 from AIS_JIF_data_prep_inf import infpubs_ais_count
 
-# fellows data - JIF
-from AIS_JIF_data_prep_fell import fellpubs_jif_count
-
-# fellows data - AIS
-from AIS_JIF_data_prep_fell import fellpubs_ais_count
-
-# affiliates data - JIF
-from AIS_JIF_data_prep_aff import affpubs_jif_count
-
-# affiliates data - AIS
-from AIS_JIF_data_prep_aff import affpubs_ais_count
-
 # JIF_sub_group_inf = JIF_sub_group_inf[JIF_sub_group_inf.Year != "nan"]
 
 # Make JIF plots
@@ -175,9 +163,7 @@ def JIF_graph_func(input, name):
 
 # make JIF plots by applying function
 
-# JIF_graph_func(infpubs_jif_count, "infrastructure")
-# JIF_graph_func(affpubs_jif_count, "affiliates")
-# JIF_graph_func(fellpubs_jif_count, "fellows")
+JIF_graph_func(infpubs_jif_count, "infrastructure")
 
 # Make AIS plots
 
@@ -307,5 +293,3 @@ def AIS_graph_func(input, name):
 # make plots by applying function
 
 AIS_graph_func(infpubs_ais_count, "infrastructure")
-AIS_graph_func(affpubs_ais_count, "affiliates")
-AIS_graph_func(fellpubs_ais_count, "fellows")
