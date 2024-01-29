@@ -3,18 +3,26 @@ import numpy as np
 import json
 import unicodedata
 
+
 def fix_spl_char(value):
-    return unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("utf-8").strip()
+    return (
+        unicodedata.normalize("NFKD", value)
+        .encode("ascii", "ignore")
+        .decode("utf-8")
+        .strip()
+    )
+
 
 ### FAC MAP
 # to their labels in the publication database
 fac_map_input = pd.read_excel(
     "Data/Reporting Units 2023.xlsx",
-    sheet_name="Reporting units",
+    sheet_name="Blad1",
     header=0,
     engine="openpyxl",
     keep_default_na=False,
 )
+
 fac_map_input["PDB label"] = fac_map_input["PDB label"].str.replace(
     r"\(.*\)", "", regex=True
 )
@@ -29,7 +37,7 @@ with open("Parsed_data/unit_map.json", "w") as ojson:
     json.dump(fac_map, ojson, indent=4)
 
 ### AFFILIATES
-# Years of interest in 2023 - 2020-22
+# Years of interest in 2024 - 2021-23
 # We have 3 data files from OO for this (one for each year)
 
 aff_y1_raw = pd.read_excel(
@@ -42,7 +50,7 @@ aff_y1_raw = pd.read_excel(
 
 aff_y2_raw = pd.read_excel(
     "Data/Users 2022.xlsx",
-    sheet_name="Unit Users 2022",
+    sheet_name="Users Duplc. for Units removed",
     header=0,
     engine="openpyxl",
     keep_default_na=False,
@@ -50,12 +58,12 @@ aff_y2_raw = pd.read_excel(
 
 aff_y3_raw = pd.read_excel(
     "Data/Users 2023.xlsx",
-    sheet_name="Unit Users 2023",
+    sheet_name="Users Duplc. for Units Removed",
     header=0,
     engine="openpyxl",
     keep_default_na=False,
 )
-#We need to combine 'Advanced Fish Technologies' to 'Spatial Proteomics'
+# We need to combine 'Advanced Fish Technologies' to 'Spatial Proteomics'
 aff_y1_raw["Unit"] = aff_y1_raw["Unit"].replace(
     "Advanced FISH Technologies",
     "Spatial Proteomics",
@@ -72,15 +80,9 @@ aff_y3_raw["Unit"] = aff_y3_raw["Unit"].replace(
 
 # Want to get counts of how many of each individual affiliation, for each unit
 
-affiliates_data_y1 = (
-    aff_y1_raw.groupby(["Unit", "PI affiliation"]).size().reset_index()
-)
-affiliates_data_y2 = (
-    aff_y2_raw.groupby(["Unit", "PI affiliation"]).size().reset_index()
-)
-affiliates_data_y3 = (
-    aff_y3_raw.groupby(["Unit", "PI affiliation"]).size().reset_index()
-)
+affiliates_data_y1 = aff_y1_raw.groupby(["Unit", "PI affiliation"]).size().reset_index()
+affiliates_data_y2 = aff_y2_raw.groupby(["Unit", "PI affiliation"]).size().reset_index()
+affiliates_data_y3 = aff_y3_raw.groupby(["Unit", "PI affiliation"]).size().reset_index()
 
 affiliates_data_y1.columns = ["Unit", "PI_aff", "Count"]
 affiliates_data_y2.columns = ["Unit", "PI_aff", "Count"]
@@ -141,7 +143,7 @@ Unit_data.rename(
         "FTEs financed by Scilifelab": "SLL_FTEs",
         "Funding 2023 SciLifeLab (kSEK)": "Fund_SLL",
         "Funding 2023 Other (kSEK)": "Fund_other",
-        "User Fees 2023 Total (kSEK)": "Fee_total"
+        "User Fees 2023 Total (kSEK)": "Fee_total",
     },
     inplace=True,
 )
@@ -162,12 +164,16 @@ Unit_data.to_csv("Parsed_data/unit_data.tsv", index=False, sep="\t")
 # Focus on data for (1) - extract individual labels for records from pub db
 
 Pubs_cat_raw = pd.read_excel(
-    "Data/infra_2022_singlelab.xlsx",
+    "Data/infra_publications_individlabels_20240117.xlsx",
     sheet_name="Publications",
     header=0,
     engine="openpyxl",
     keep_default_na=False,
 )
+
+Pubs_cat_raw = Pubs_cat_raw[
+    (Pubs_cat_raw["Year"] > 2020) & (Pubs_cat_raw["Year"] < 2024)
+]
 
 # # Need to get data for (fac) and groupby
 
@@ -189,7 +195,7 @@ pub_cat_group = pub_sub.groupby(["Year", "Labels", "Qualifiers"]).size().reset_i
 
 pub_cat_group["Labels"] = pub_cat_group["Labels"].str.replace(r"\(.*\)", "", regex=True)
 
-pub_cat_data = pub_cat_group.replace(fac_map, regex=True)
+pub_cat_data = pub_cat_group.replace(fac_map)
 
 # # # in 2021 (onwards), don't need the previous duplication for the two mass cytometry centres
 
@@ -202,16 +208,20 @@ pub_cat_data.to_csv("Parsed_data/pub_cat_data.tsv", index=False, sep="\t")
 # i.e. one record per publication
 
 Pubs_JIF_raw = pd.read_excel(
-    "Data/infra_2022_comblab.xlsx",
+    "Data/infra_publications_20240117.xlsx",
     sheet_name="Publications",
     header=0,
     engine="openpyxl",
     keep_default_na=False,
 )
 
+Pubs_JIF_raw = Pubs_JIF_raw[
+    (Pubs_JIF_raw["Year"] > 2020) & (Pubs_JIF_raw["Year"] < 2024)
+]
+
 JIF_scores_raw = pd.read_excel(
     "Data/JCR_JournalResults_2023_MB_neat.xlsx",
-    sheet_name="Info",
+    sheet_name="AIS_2",
     header=0,
     engine="openpyxl",
     keep_default_na=False,
@@ -357,6 +367,8 @@ JIF_merge_weISSN = JIF_merge_weISSN.drop(
 ## below prints out a file that can be checked to determine whether
 ## manual work may increase the number of matches
 
+# JIF_merge_weISSN.to_excel("Check_manual_improve_infra_2.xlsx")
+
 JIF_merge_weISSN.rename(
     columns={
         "ISSN_x": "ISSN",
@@ -400,11 +412,12 @@ match_JIF_seplabs["Labels"] = match_JIF_seplabs["Labels"].str.replace(
     r"\(.*\)", "", regex=True
 )
 
-JIF_match_basic = match_JIF_seplabs.replace(fac_map, regex=True)
+JIF_match_basic = match_JIF_seplabs.replace(fac_map)
 
 # Need to do a group by and check the sums work! (and align with above pub numbers)
 
 JIF_data = JIF_match_basic.loc[:, ("Year", "Labels", "JIFcat", "Qualifiers")]
+
 # need to drop out the technology development papers
 JIF_data.drop(
     JIF_data[JIF_data["Qualifiers"] == "Technology development"].index, inplace=True
@@ -415,10 +428,10 @@ JIF_data.columns = ["Year", "Unit", "JIFcat", "Count"]
 JIF_data.to_csv("Parsed_data/pub_jif_data.tsv", index=False, sep="\t")
 
 
-# # # As a check, can compare publications data divided by category and JIF for each unit
-# # # The total numbers for each unit and for each year should align.
-##JIF_data.to_excel("Check_JIFdata_June23.xlsx")
-##pub_cat_data.to_excel("Check_pubcatdata_June23.xlsx")
+# # As a check, can compare publications data divided by category and JIF for each unit
+# # The total numbers for each unit and for each year should align.
+# JIF_data.to_excel("Check_JIFdata_Jan24.xlsx")
+# pub_cat_data.to_excel("Check_pubcatdata_Jan24.xlsx")
 
 # Tech_dev = pub_cat_data[(pub_cat_data["Qualifiers"] == "Technology development")]
 # print(Tech_dev.Count)
