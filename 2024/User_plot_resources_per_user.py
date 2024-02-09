@@ -4,13 +4,13 @@
 import pandas as pd
 import plotly.graph_objects as go
 import os
-from colour_science_2022 import (
+from colour_science_2023 import (
     SCILIFE_COLOURS,
 )
 
 # Add data
 Res_user_cat = pd.read_excel(
-    "data/User Cat. Analysis 2021_1.xlsx",
+    "Data/Resources by Category 2023.xlsx",
     sheet_name="Single Data",
     header=0,
     engine="openpyxl",
@@ -20,10 +20,10 @@ Res_user_cat = pd.read_excel(
 
 Res_user_cat = Res_user_cat.rename(
     columns={
-        "Academia National": "Acad_Nat",
-        "Academia International": "Acad_Int",
+        "Academy, National": "Acad_Nat",
+        "Akademi, International": "Acad_Int",
         "Internal Technology Development": "Int_Techdev",
-        "Other gov. agencies": "Oth_Gov",
+        "Other Governmental Organizations": "Oth_Gov",
     }
 )
 # print(Res_user_cat.info())

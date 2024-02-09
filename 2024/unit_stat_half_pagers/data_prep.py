@@ -1,4 +1,5 @@
 import pandas as pd
+from pathlib import Path
 import numpy as np
 import json
 import unicodedata
@@ -12,6 +13,7 @@ def fix_spl_char(value):
         .strip()
     )
 
+Path("Parsed_data").mkdir(parents=True, exist_ok=True)
 
 ### FAC MAP
 # to their labels in the publication database
@@ -23,18 +25,25 @@ fac_map_input = pd.read_excel(
     keep_default_na=False,
 )
 
-fac_map_input["PDB label"] = fac_map_input["PDB label"].str.replace(
-    r"\(.*\)", "", regex=True
-)
+# fac_map_input["PDB label"] = fac_map_input["PDB label"].str.replace(
+#     r"\(.*\)", "", regex=True
+# )
+
 # You need the above to make sure you don't get spaces in file names
 fac_map_input = fac_map_input[["Unit", "PDB label"]]
 fac_map_input = fac_map_input.replace("", np.nan)
 fac_map_input["PDB label"] = fac_map_input["PDB label"].fillna(fac_map_input["Unit"])
 fac_map_input.rename(columns={"PDB label": "Label"}, inplace=True)
-fac_map = dict(zip(fac_map_input.Label, fac_map_input.Unit))
+fac_map = {}
+for labels, unit in zip(fac_map_input.Label, fac_map_input.Unit):
+    unit = unit.strip()
+    labels = labels.split("+")
+    for l in labels:
+        l = l.strip()
+        fac_map[l] = unit
 
-with open("Parsed_data/unit_map.json", "w") as ojson:
-    json.dump(fac_map, ojson, indent=4)
+with open("Parsed_data/unit_list.json", "w") as ojson:
+    json.dump(list(fac_map_input.Unit), ojson, indent=4)
 
 ### AFFILIATES
 # Years of interest in 2024 - 2021-23
@@ -64,19 +73,9 @@ aff_y3_raw = pd.read_excel(
     keep_default_na=False,
 )
 # We need to combine 'Advanced Fish Technologies' to 'Spatial Proteomics'
-aff_y1_raw["Unit"] = aff_y1_raw["Unit"].replace(
-    "Advanced FISH Technologies",
-    "Spatial Proteomics",
-)
-
-aff_y2_raw["Unit"] = aff_y2_raw["Unit"].replace(
-    "Advanced FISH Technologies",
-    "Spatial Proteomics",
-)
-aff_y3_raw["Unit"] = aff_y3_raw["Unit"].replace(
-    "Advanced FISH Technologies",
-    "Spatial Proteomics",
-)
+aff_y1_raw["Unit"] = aff_y1_raw["Unit"].replace(fac_map)
+aff_y2_raw["Unit"] = aff_y2_raw["Unit"].replace(fac_map)
+aff_y3_raw["Unit"] = aff_y3_raw["Unit"].replace(fac_map)
 
 # Want to get counts of how many of each individual affiliation, for each unit
 
@@ -137,10 +136,11 @@ Unit_data = pd.read_excel(
 Unit_data.rename(
     columns={
         "Head of Unit": "HOU",
+        "Co Head of Unit": "Co_HOU",
         "Platform Scientific Director": "PSD",
         "SciLifeLab unit since": "SLL_since",
         "Host university": "H_uni",
-        "FTEs financed by Scilifelab": "SLL_FTEs",
+        "FTEs": "SLL_FTEs",
         "Funding 2023 SciLifeLab (kSEK)": "Fund_SLL",
         "Funding 2023 Other (kSEK)": "Fund_other",
         "User Fees 2023 Total (kSEK)": "Fee_total",
@@ -179,6 +179,8 @@ Pubs_cat_raw = Pubs_cat_raw[
 
 pub_sub = Pubs_cat_raw[["Year", "Labels", "Qualifiers"]]
 pub_sub = pub_sub.replace(r"^\s*$", "No category", regex=True)
+pub_sub["Labels"] = pub_sub["Labels"].replace(fac_map)
+pub_sub["Labels"] = pub_sub["Labels"].str.replace(r" \(.*\)", "", regex=True)
 pub_sub["Qualifiers"] = pub_sub["Qualifiers"].astype("category")
 
 # # Clinical Biomarkers and PLA and Single Cell Proteomics merged to Affinity Proteomics Uppsala.
@@ -191,11 +193,7 @@ pub_sub["Qualifiers"] = pub_sub["Qualifiers"].astype("category")
 #     "PLA and Single Cell Proteomics", "Affinity Proteomics Uppsala", regex=True
 # )
 
-pub_cat_group = pub_sub.groupby(["Year", "Labels", "Qualifiers"]).size().reset_index()
-
-pub_cat_group["Labels"] = pub_cat_group["Labels"].str.replace(r"\(.*\)", "", regex=True)
-
-pub_cat_data = pub_cat_group.replace(fac_map)
+pub_cat_data = pub_sub.groupby(["Year", "Labels", "Qualifiers"]).size().reset_index()
 
 # # # in 2021 (onwards), don't need the previous duplication for the two mass cytometry centres
 
@@ -409,14 +407,13 @@ match_JIF_seplabs["JIFcat"] = pd.cut(
 # # replace facility labels
 
 match_JIF_seplabs["Labels"] = match_JIF_seplabs["Labels"].str.replace(
-    r"\(.*\)", "", regex=True
+    r" \(.*\)", "", regex=True
 )
-
-JIF_match_basic = match_JIF_seplabs.replace(fac_map)
+match_JIF_seplabs["Labels"] = match_JIF_seplabs["Labels"].replace(fac_map)
 
 # Need to do a group by and check the sums work! (and align with above pub numbers)
 
-JIF_data = JIF_match_basic.loc[:, ("Year", "Labels", "JIFcat", "Qualifiers")]
+JIF_data = match_JIF_seplabs.loc[:, ("Year", "Labels", "JIFcat", "Qualifiers")]
 
 # need to drop out the technology development papers
 JIF_data.drop(

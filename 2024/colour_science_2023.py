@@ -134,9 +134,10 @@ SCILIFE_COLOURS_GREYS = [
 ]
 PLATFORM_FUNDING_COLOURS = {
     "User Fees": "#A6A6A6",
+    "SciLifeLab": "#A7C947",
     "SciLifeLab Base": "#A7C947",
     "SciLifeLab Instrument": "#E5E5E5",
-    "University": "#045C64",
+    "Universities": "#045C64",
     "VR": "#491F53",
     "KAW": "#4C979F",
     "Vinnova": "#D3E4A3",
