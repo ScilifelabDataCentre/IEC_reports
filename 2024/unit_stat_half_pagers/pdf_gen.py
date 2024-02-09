@@ -11,10 +11,10 @@ from reportlab.lib.enums import TA_CENTER
 from svglib.svglib import svg2rlg
 from pathlib import Path
 
-from data_loader import unit_data, units_map  # funding_data
+from data_loader import unit_data, units_list  # funding_data
 from unit_pdf_template import report_lab_obj
 from unit_pdf_specs import unit_pdf_data
-from plot_gen import publication_plot, users_plot, users_stacked_plot
+from plot_gen import publication_plot, users_plot
 
 
 def get_image_story(impath, imw=83, imh=65, title=None, style=None, tech_pub_count=0):
@@ -130,15 +130,18 @@ styles.add(
     )
 )
 
+# units_list = [
+#     "Swedish Metabolomics Centre"
+# ]
+
 # Generate facility stat plot for all facilities
-for unit in units_map.keys():
-    unit = "Support for Computational Resources"  # units_map[unit]
+for unit in units_list:
 
     print("Processing {}".format(unit))
 
     unit_fname = unit.replace(",", "")
     unit_grph = unit_pdf_data.get(unit, {})
-    unit_stat = unit_data[unit_data.Unit == unit].to_dict("records")[0]
+    unit_stat = unit_data[unit_data.Unit == unit].fillna(0).to_dict("records")[0]
 
     head_style, text_style = unit_grph.get("style", ("inner_heading", "page_text"))
     caller_dict = {}
@@ -209,83 +212,58 @@ for unit in units_map.keys():
     else:
         print("{} - missing 2023 users".format(unit))
 
-    # Put in the facility stat
-    if unit == "Support for Computational Resources":
-        story.append(
-            Paragraph(
-                "<font color='#95C11E' name=Arial-bold>Basic Information</font>",
-                styles[head_style],
-            )
+    story.append(
+        Paragraph(
+            "<font color='#95C11E' name=Arial-bold>Basic Information</font>",
+            styles[head_style],
         )
-        story.append(
-            Paragraph(
-                "<font name=Arial-bold>HU:</font> {}".format(unit_stat["HOU"]),
-                styles[text_style],
-            )
-        )
-        story.append(
-            Paragraph(
-                "<font name=Arial-bold>Host University:</font> {}".format(
-                    unit_stat["H_uni"]
+    )
+    story.append(
+        Paragraph(
+            "<font name=Arial-bold>{}:</font> {}".format(
+                "PD" if unit in ["Clinical Genomics", "Drug Discovery and Development"] else "HU",
+                unit_stat["HOU"]
                 ),
+            styles[text_style],
+        )
+    )
+    if unit_stat["Co_HOU"]:
+        story.append(
+            Paragraph(
+                "<font name=Arial-bold>Co-PD:</font> {}".format(unit_stat["Co_HOU"]),
                 styles[text_style],
             )
         )
-        story.append(
-            Paragraph(
-                "<font name=Arial-bold>SciLifeLab unit since:</font> {}".format(
-                    unit_stat["SLL_since"]
-                ),
-                styles[text_style],
-            )
+    story.append(
+        Paragraph(
+            "<font name=Arial-bold>Host University:</font> {}".format(
+                unit_stat["H_uni"]
+            ),
+            styles[text_style],
         )
-        story.append(
-            Paragraph(
-                "<font name=Arial-bold>FTEs:</font> {}".format(unit_stat["FTEs"]),
-                styles[text_style],
-            )
+    )
+    story.append(
+        Paragraph(
+            "<font name=Arial-bold>SciLifeLab unit since:</font> {}".format(
+                unit_stat["SLL_since"]
+            ),
+            styles[text_style],
         )
-    else:
-        story.append(
-            Paragraph(
-                "<font color='#95C11E' name=Arial-bold>Basic Information</font>",
-                styles[head_style],
-            )
+    )
+    story.append(
+        Paragraph(
+            "<font name=Arial-bold>FTEs:</font> {}".format(unit_stat["SLL_FTEs"]),
+            styles[text_style],
         )
+    )
+    if unit_stat["PSD"]:
         story.append(
             Paragraph(
                 "<font name=Arial-bold>PSD:</font> {}".format(unit_stat["PSD"]),
                 styles[text_style],
             )
         )
-        story.append(
-            Paragraph(
-                "<font name=Arial-bold>HU:</font> {}".format(unit_stat["HOU"]),
-                styles[text_style],
-            )
-        )
-        story.append(
-            Paragraph(
-                "<font name=Arial-bold>Host University:</font> {}".format(
-                    unit_stat["H_uni"]
-                ),
-                styles[text_style],
-            )
-        )
-        story.append(
-            Paragraph(
-                "<font name=Arial-bold>SciLifeLab unit since:</font> {}".format(
-                    unit_stat["SLL_since"]
-                ),
-                styles[text_style],
-            )
-        )
-        story.append(
-            Paragraph(
-                "<font name=Arial-bold>FTEs:</font> {}".format(unit_stat["FTEs"]),
-                styles[text_style],
-            )
-        )
+
     # story.append(Paragraph("<font name=Arial-bold>FTEs financed by SciLifeLab:</font> {}".format(unit_stat['SLL_FTEs']), styles[text_style]))
     story.append(Spacer(1, 3 * mm))
     story.append(

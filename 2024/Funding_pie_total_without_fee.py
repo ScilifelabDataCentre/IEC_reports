@@ -10,9 +10,17 @@ from colour_science_2023 import (
     PLATFORM_FUNDING_COLOURS,
 )
 
+# Plat_tot_fund_data = pd.read_excel(
+#     "Data/Total Funding excl User Fees 2021.xlsx",
+#     sheet_name="Total Funding 2021",
+#     header=0,
+#     engine="openpyxl",
+#     keep_default_na=False,
+# )
+
 Plat_tot_fund_data = pd.read_excel(
-    "Data/Total Funding and User Fees 2023.xlsx",
-    sheet_name="Total Funding + User Fees",
+    "Data/Total Funding excl User Fees 2023.xlsx",
+    sheet_name="Total Funding 2023",
     header=0,
     engine="openpyxl",
     keep_default_na=False,
@@ -20,7 +28,7 @@ Plat_tot_fund_data = pd.read_excel(
 
 
 # OO requested percentages rounded to nearest percent for this graph
-Plat_tot_fund_data["Fund_MSEK"] = Plat_tot_fund_data["MSEK"]
+Plat_tot_fund_data["Fund_MSEK"] = Plat_tot_fund_data["Total (MSEK)"]
 # print(Acaduser_data)
 colours = np.array([""] * len(Plat_tot_fund_data["Financier"]), dtype=object)
 for i in Plat_tot_fund_data["Financier"]:
@@ -41,30 +49,29 @@ fig = go.Figure(
 
 fig.update_traces(
     textposition="outside",
-    texttemplate="%{label} <br>%{value:.1f} ",
-    textfont=dict(family="Arial", size=26),
+    texttemplate="%{label} <br>(%{value:.1f}) ",
+    textfont=dict(family="Arial", size=28),
 )
 fig.update_layout(
     margin=dict(l=0, r=0, b=0, t=0),
-    # annotations=[
-    #     dict(
-    #         showarrow=False,
-    #         text="{}".format(round(sum(Plat_tot_fund_data["Fund_MSEK"]))),
-    #         font=dict(family="Arial", size=50),  # should work for all centre bits
-    #         x=0.5,
-    #         y=0.5,
-    #     )
-    # ],
+    annotations=[
+        dict(
+            showarrow=False,
+            text="{}".format(round(sum(Plat_tot_fund_data["Fund_MSEK"]))),
+            font=dict(family="Arial", size=52),  # should work for all centre bits
+            x=0.5,
+            y=0.5,
+        )
+    ],
     showlegend=False,
     width=1000,
     height=1000,
     autosize=False,
 )
-if not os.path.isdir("Plots/"):
-    os.mkdir("Plots/")
+if not os.path.isdir("Plots/Platform_fund_pies"):
+    os.mkdir("Plots/Platform_fund_pies")
 
 # fig.show()
 
-fig.write_image("Plots/Total_infrastructure_funding.png", scale=3)
-# fig.write_image("Plots/total infrastructure funding.svg", scale=3)
-
+#fig.write_image("Plots/Platform_fund_pies/Total_infrastructure_funding_2021.png", scale=3)
+fig.write_image("Plots/Platform_fund_pies/Total_infrastructure_funding_2023.png", scale=3)

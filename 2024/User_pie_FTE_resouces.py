@@ -4,22 +4,20 @@
 import pandas as pd
 import plotly.graph_objects as go
 import os
-from colour_science_2022 import (
+from colour_science_2023 import (
     SCILIFE_COLOURS,
 )
 
 FTEusercat_data = pd.read_excel(
-    "data/FTE Resources per User Category.xlsx",
+    "Data/Resources by Category 2023.xlsx",
     sheet_name="Sheet1",
-    header=2,
+    header=0,
     engine="openpyxl",
     keep_default_na=False,
 )
 
-FTEusercat_data.drop(FTEusercat_data.columns[0], axis=1, inplace=True)
-
 # Round percentages to integrer
-FTEusercat_data["Round_perc"] = (FTEusercat_data["Procent"] * 100).round().astype(int)
+FTEusercat_data["Round_perc"] = (FTEusercat_data["Percent"] * 100).round().astype(int)
 # print(FTEusercat_data)
 
 colours = [
@@ -36,27 +34,19 @@ FTEusercat_data.set_axis(["Category", "Percent", "Round_perc"], axis=1, inplace=
 
 # Edited this to fit more nicely
 FTEusercat_data["Category"] = FTEusercat_data["Category"].replace(
-    "Academy National",
-    "Academia<br>National",
-)
-FTEusercat_data["Category"] = FTEusercat_data["Category"].replace(
-    "Academy International",
-    "Academia International",
-)
-FTEusercat_data["Category"] = FTEusercat_data["Category"].replace(
-    "Other Governmental Agencies",
-    "Other Government Agencies",
+    "Other Governmental Organizations",
+    "Other Government Organizations",
 )
 FTEusercat_data["Category"] = FTEusercat_data["Category"].replace(
     "Internal Technology Development",
-    "Internal<br>Technology<br>Development",
+    "Internal Technology<br>Development",
 )
 
 fig = go.Figure(
     go.Pie(
         values=FTEusercat_data["Round_perc"],
         labels=FTEusercat_data["Category"],
-        hole=0.6,
+        hole=0.7,
         marker=dict(colors=colours, line=dict(color="#000000", width=1)),
         direction="clockwise",
         sort=True,
@@ -65,11 +55,11 @@ fig = go.Figure(
 
 fig.update_traces(
     textposition="outside",
-    texttemplate="%{label} <br>(%{value}%)",
+    texttemplate="%{label} <br>%{value}%",
+    textfont=dict(family="Arial", size=25),
 )
 fig.update_layout(
     margin=dict(l=0, r=0, b=0, t=0),
-    font=dict(size=23),
     showlegend=False,
     width=1000,
     height=1000,
@@ -77,7 +67,8 @@ fig.update_layout(
 )
 if not os.path.isdir("Plots"):
     os.mkdir("Plots")
+
 # fig.show()
 
-fig.write_image("Plots/FTE_Resource_per_usercat.svg", scale=3)
-fig.write_image("Plots/FTE_Resource_per_usercat.png", scale=3)
+fig.write_image("Plots/Distribution_of_FTE_resource.png", scale=3)
+#fig.write_image("Plots/FTE_Resource_per_usercat.svg", scale=3)

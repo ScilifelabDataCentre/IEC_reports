@@ -8,8 +8,8 @@ from colour_science_2023 import (
 )
 
 df = pd.read_excel(
-    "Data/Distribution of Total NAT and LÄK Funding 2023.xlsx",
-    sheet_name="Funding_mod",
+    "Data/SciLifeLab National Funding 2024.xlsx",
+    sheet_name="Funding Univ",
     header=0,
     engine="openpyxl",
     keep_default_na=False,
@@ -17,31 +17,22 @@ df = pd.read_excel(
 
 df.rename(
     columns={
-        "Funding 2023 (MSEK)": "Funding (MSEK)",
+        "Funding 2024 (MSEK)": "Funding (MSEK)",
     },
     inplace=True,
 )
 
 df["Category"] = df["Category"].replace(
-    "Collaborations & External Relations", "Collaborations & <br>External Relations"
+    "Collaborations & External Relations", "Collaborations & External Relations"
 )
 df["Category"] = df["Category"].replace(
-    "Infrastructure Platforms", "Infrastructure <br>Platforms"
-)
-df["Category"] = df["Category"].replace(
-    "Infrastructure Expensive Instruments", "Infrastructure Expensive<br>Instruments"
-)
-df["Category"] = df["Category"].replace("Training and courses ", "Training & courses ")
-df["Category"] = df["Category"].replace(
-    "Campus Solna and Navet", "Campus Solna<br>& Navet"
-)
-df["Category"] = df["Category"].replace(
-    "Joint SciLifeLab Initiatives", "Joint SciLifeLab Initiatives"
-)
-df["Category"] = df["Category"].replace(
-    "Collaborations and External Relations", "Collaborations & External Relations"
+    "Infrastructure Platforms", "Infrastructure<br>Platforms"
 )
 
+df["Category"] = df["Category"].replace("Training and courses ", "Training & courses ")
+df["Category"] = df["Category"].replace(
+    "Site costs, Campus Solna & Navet", "Site costs, Campus Solna<br>& Navet"
+)
 
 colours = [
     SCILIFE_COLOURS[0],
@@ -65,7 +56,7 @@ fig = go.Figure(
     go.Pie(
         values=df["Funding (MSEK)"],
         labels=df["Category"],
-        hole=0.6,
+        hole=0.7,
         marker=dict(colors=colours, line=dict(color="#000000", width=1)),
         direction="clockwise",
         sort=True,
@@ -74,19 +65,22 @@ fig = go.Figure(
 
 fig.update_traces(
     textposition="outside",
-    texttemplate="%{label} (%{value})",
+    texttemplate="%{label} <br>%{value} ",
+    textfont=dict(family="Arial", size=25),
 )
+
 fig.update_layout(
     margin=dict(l=100, r=100, b=100, t=100),
-    font=dict(size=34),
     showlegend=False,
-    width=1500,
-    height=1500,
+    width=1000,
+    height=1000,
     autosize=False,
 )
+
 if not os.path.isdir("Plots"):
     os.mkdir("Plots")
-fig.show()
 
-# fig.write_image("Plots/SLL_nat_and_DDD_fund.png", scale=3)
+# fig.show()
+
+fig.write_image("Plots/Scilifelab_National_and_DDD.png", scale=3)
 # fig.write_image("Plots/SLL_nat_and_DDD_fund.svg", scale=3)

@@ -10,15 +10,12 @@ from colour_science_2023 import (
 )
 
 Acaduser_data = pd.read_excel(
-    "Data/Academic Users 2022.xlsx",
-    sheet_name="Academic Users 2022 mod",
+    "Data/Academic User Distribution 2023.xlsx",
+    sheet_name="Användare per lärosäte",
     header=0,
     engine="openpyxl",
     keep_default_na=False,
 )
-
-# OO requested percentages rounded to nearest percent for this graph
-Acaduser_data["Round_perc"] = (Acaduser_data["Percent"] * 100).round().astype(int)
 
 colours = [
     SCILIFE_COLOURS[2],
@@ -36,43 +33,27 @@ colours = [
     SCILIFE_COLOURS[6],
 ]
 
+replace_text = {
+    "Swedish University of Agricultural Sciences": "Swedish University of <br>Agricultural Sciences",
+    "University of Gothenburg": "University of<br>Gothenburg",
+    "KTH Royal Institute of Technology": "KTH Royal Institute<br>of Technology",
+    "Chalmers University of Technology": "Chalmers University<br>of Technology",
+    "%": ""
+}
+
 # Edited this to fit more nicely
-Acaduser_data["Academic User affiliation"] = Acaduser_data[
-    "Academic User affiliation"
-].replace(
-    "Swedish University of Agricultural Sciences",
-    "Swedish University of <br>Agricultural Sciences",
-)
-Acaduser_data["Academic User affiliation"] = Acaduser_data[
-    "Academic User affiliation"
-].replace(
-    "University of Gothenburg",
-    "University of<br>Gothenburg",
-)
-Acaduser_data["Academic User affiliation"] = Acaduser_data[
-    "Academic User affiliation"
-].replace(
-    "International University",
-    "International<br>University",
-)
-Acaduser_data["Academic User affiliation"] = Acaduser_data[
-    "Academic User affiliation"
-].replace(
-    "International University",
-    "International<br>University",
-)
-Acaduser_data["Academic User affiliation"] = Acaduser_data[
-    "Academic User affiliation"
-].replace(
-    "Chalmers University of Technology",
-    "Chalmers University<br>of Technology",
-)
+
+Acaduser_data = Acaduser_data.replace(replace_text)
+
+# OO requested percentages rounded to nearest percent for this graph
+Acaduser_data["Round_perc"] = (Acaduser_data["Percent"] * 100).round().astype(int)
+
 
 fig = go.Figure(
     go.Pie(
         values=Acaduser_data["Round_perc"],
-        labels=Acaduser_data["Academic User affiliation"],
-        hole=0.6,
+        labels=Acaduser_data["University"],
+        hole=0.7,
         marker=dict(colors=colours, line=dict(color="#000000", width=1)),
         direction="clockwise",
         sort=True,
@@ -81,11 +62,12 @@ fig = go.Figure(
 
 fig.update_traces(
     textposition="outside",
-    texttemplate="%{label} <br>(%{value}%)",
+    texttemplate="%{label} <br>%{value}%",
+    textfont=dict(family="Arial", size=24),
 )
+
 fig.update_layout(
     margin=dict(l=0, r=0, b=0, t=0),
-    font=dict(size=23),
     showlegend=False,
     width=1000,
     height=1000,
@@ -93,7 +75,8 @@ fig.update_layout(
 )
 if not os.path.isdir("Plots"):
     os.mkdir("Plots")
-fig.show()
 
+# fig.show()
+
+fig.write_image("Plots/Distribution_of_academic_users.png", scale=3)
 # fig.write_image("Plots/Acaduser_data_pie.svg", scale=3)
-# fig.write_image("Plots/Acaduser_data_pie.png", scale=3)

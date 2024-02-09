@@ -16,7 +16,6 @@ from colour_science_2024 import (
 
 from data_loader import pub_cat_data, pub_jif_data, affiliate_data
 
-
 def get_highest_val(pdata):
     Years_int = pdata["Year"].unique()
     Year_one = pdata[(pdata["Year"] == Years_int[0])]
@@ -53,11 +52,8 @@ def publication_plot(unit, pformat="svg"):
     collab = unit_cat_data[unit_cat_data["Qualifiers"] == "Collaborative"]
     service = unit_cat_data[unit_cat_data["Qualifiers"] == "Service"]
     nocat = unit_cat_data[unit_cat_data["Qualifiers"] == "No category"]
-    unit_cat_data.drop(
-        unit_cat_data[unit_cat_data["Qualifiers"] == "Technology development"].index,
-        inplace=True,
-    )
-
+    unit_cat_data = unit_cat_data.loc[unit_cat_data["Qualifiers"] != "Technology development"]
+    
     # add No category if exists
     data = []
     if sum(nocat.Count) != 0:
@@ -72,11 +68,8 @@ def publication_plot(unit, pformat="svg"):
                 ),
             ),
         )
-
-    # create bar plot only there in any data to show
-    cat_plot_file = False
-    if any(pd.concat([tecdev, collab, service, nocat]).Count):
-        data = data + [
+    if sum(collab.Count) != 0:
+        data.append(
             go.Bar(
                 name="Collaborative ",
                 x=collab.Year,
@@ -85,7 +78,10 @@ def publication_plot(unit, pformat="svg"):
                 marker=dict(
                     color=SCILIFE_COLOURS[12], line=dict(color="#000000", width=1)
                 ),
-            ),
+            )
+        )
+    if sum(service.Count) != 0:
+        data.append(
             go.Bar(
                 name="Service ",
                 x=service.Year,
@@ -94,9 +90,12 @@ def publication_plot(unit, pformat="svg"):
                 marker=dict(
                     color=SCILIFE_COLOURS[0], line=dict(color="#000000", width=1)
                 ),
-            ),
-        ]
+            )
+        )
 
+    # create bar plot only there in any data to show
+    cat_plot_file = False
+    if any(pd.concat([tecdev, collab, service, nocat]).Count):
         fig = go.Figure(data=data)
         fig.update_layout(
             barmode="stack",
@@ -240,7 +239,7 @@ def publication_plot(unit, pformat="svg"):
     return (cat_plot_file, jif_plot_file, sum(tecdev.Count))
 
 
-def users_plot(unit, year, pformat="png", name_fsize=25, annotation_fsize=34):
+def users_plot(unit, year, pformat="png", name_fsize=23, annotation_fsize=32, stacked=False):
     unit_usr_data = affiliate_data[
         (affiliate_data["Unit"] == unit) & (affiliate_data["Year"] == year)
     ]
@@ -265,8 +264,10 @@ def users_plot(unit, year, pformat="png", name_fsize=25, annotation_fsize=34):
                 values=u_counts,
                 labels=a_labels,
                 text=[
-                    "{} ({}%)".format(
-                        a_labels[i], round(u_counts[i] / sum(u_counts) * 100, 1)
+                    "{}{}({}%)".format(
+                        a_labels[i],
+                        "<br>" if stacked else " ",
+                        round(u_counts[i] / sum(u_counts) * 100, 1)
                     )
                     for i in range(len(unit_usr_data))
                 ],
@@ -306,91 +307,3 @@ def users_plot(unit, year, pformat="png", name_fsize=25, annotation_fsize=34):
 
     return usr_plot_file
 
-
-# Need to make some plots with different label orientation (stacked)
-
-
-def users_stacked_plot(unit, year, pformat="svg", name_fsize=25, annotation_fsize=34):
-    unit_usr_data = affiliate_data[
-        (affiliate_data["Unit"] == unit) & (affiliate_data["Year"] == year)
-    ]
-    if sum(unit_usr_data.Count) < 2:
-        pi_plural = "PI"
-    else:
-        pi_plural = "PIs"
-    u_counts = unit_usr_data["Count"].to_list()
-    a_labels = unit_usr_data["PI_aff"].to_list()
-
-    # Create plot only if there is any data
-    usr_plot_file = False
-    if any(u_counts):
-        colours = np.array([""] * len(unit_usr_data["PI_aff"]), dtype=object)
-        for i in unit_usr_data["PI_aff"]:
-            colours[
-                np.where(unit_usr_data["PI_aff"] == i)
-            ] = FACILITY_USER_AFFILIATION_COLOUR_OFFICIAL_ABB[str(i)]
-
-        fig = go.Figure(
-            go.Pie(
-                values=u_counts,
-                labels=a_labels,
-                text=[
-                    "{}<br>({}%)".format(
-                        a_labels[i], round(u_counts[i] / sum(u_counts) * 100, 1)
-                    )
-                    for i in range(len(unit_usr_data))
-                ],
-                hole=0.6,
-                marker=dict(colors=colours, line=dict(color="#000000", width=1)),
-                direction="clockwise",
-                sort=True,
-                textinfo="text",
-                textposition="outside",
-            )
-        )
-
-        fig.update_layout(
-            font=dict(family="Arial", size=name_fsize),
-            autosize=False,
-            margin=go.layout.Margin(t=30, r=50, b=50, l=60),
-            annotations=[
-                dict(
-                    showarrow=False,
-                    text="{} {}".format(sum(unit_usr_data.Count), pi_plural),
-                    font=dict(size=annotation_fsize),
-                    x=0.5,
-                    y=0.5,
-                )
-            ],
-            showlegend=False,
-        )
-
-        # create output dir if doesn't exist
-        Path("Plots/usr_plots/").mkdir(parents=True, exist_ok=True)
-
-        # write plot to a file
-        usr_plot_file = "Plots/usr_plots/{}_{}.{}".format(
-            unit.replace(" ", "_"), year, pformat
-        )
-        fig.write_image(usr_plot_file)
-
-    return usr_plot_file
-
-
-# for i in affiliate_data["Unit"].unique():
-#     temp = affiliate_data[(affiliate_data["Unit"] == i)]
-#     for z in temp["Year"].unique():
-#         users_plot(i, z)
-
-# for i in pub_cat_data["Unit"].unique():
-#     publication_plot(i)
-
-# User plots for units that look better stacked.
-
-publication_plot("Glycoproteomics and MS Proteomics and MS Proteomics")
-
-# for i in affiliate_data["Year"].unique():
-#     temp = affiliate_data[(affiliate_data["Year"] == i)]
-#     users_stacked_plot("Ancient DNA", i)
-
-# users_stacked_plot("National Genomics Infrastructure", 2020)
