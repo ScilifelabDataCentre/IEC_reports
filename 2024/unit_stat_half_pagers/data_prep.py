@@ -13,6 +13,7 @@ def fix_spl_char(value):
         .strip()
     )
 
+
 Path("Parsed_data").mkdir(parents=True, exist_ok=True)
 
 ### FAC MAP
@@ -136,7 +137,7 @@ Unit_data = pd.read_excel(
 Unit_data.rename(
     columns={
         "Head of Unit": "HOU",
-        "Co Head of Unit": "Co_HOU",
+        "Co-Head of Unit": "Co_HOU",
         "Platform Scientific Director": "PSD",
         "SciLifeLab unit since": "SLL_since",
         "Host university": "H_uni",

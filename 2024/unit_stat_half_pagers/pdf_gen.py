@@ -85,7 +85,7 @@ styles.add(
         name="page_text_s",
         parent=styles["Normal"],
         fontName="Arial",
-        fontSize=9.5,
+        fontSize=9.2,
         bold=0,
         color="#000000",
         leading=13,
@@ -130,20 +130,17 @@ styles.add(
     )
 )
 
-# units_list = [
-#     "Swedish Metabolomics Centre"
-# ]
+units_list = ["National Genomics Infrastructure"]
 
-# Generate facility stat plot for all facilities
+# Generate stat plot for all units
 for unit in units_list:
-
     print("Processing {}".format(unit))
 
     unit_fname = unit.replace(",", "")
     unit_grph = unit_pdf_data.get(unit, {})
     unit_stat = unit_data[unit_data.Unit == unit].fillna(0).to_dict("records")[0]
 
-    head_style, text_style = unit_grph.get("style", ("inner_heading", "page_text"))
+    head_style, text_style = unit_grph.get("style", ("inner_heading", "page_text_s"))
     caller_dict = {}
     all_frame_names = ["ustat", "ctbar", "jfbar", "usr_y1", "usr_y2", "usr_y3"]
     frames_to_work = unit_grph.get("frames", {}).get("flist", all_frame_names)[1:]
@@ -221,9 +218,11 @@ for unit in units_list:
     story.append(
         Paragraph(
             "<font name=Arial-bold>{}:</font> {}".format(
-                "PD" if unit in ["Clinical Genomics", "Drug Discovery and Development"] else "HU",
-                unit_stat["HOU"]
-                ),
+                "PD"
+                if unit in ["Clinical Genomics", "Drug Discovery and Development"]
+                else "HU",
+                unit_stat["HOU"],
+            ),
             styles[text_style],
         )
     )
