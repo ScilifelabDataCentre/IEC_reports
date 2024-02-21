@@ -4,6 +4,8 @@
 # This is the updated colour science code to reflect the
 # 2020 SciLifeLab visual ID.
 
+import numpy as np
+
 # Colourblind friendly colour sets - not typically used in reporting
 COLOURS = {
     1: ["#4477AA"],

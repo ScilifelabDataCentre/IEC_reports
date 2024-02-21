@@ -11,27 +11,15 @@ from colour_science_2023 import (
     PLATFORM_FUNDING_COLOURS,
 )
 
-Indiv_plat_fund_data = pd.read_excel(
-    "Data/Platform Funding 2023.xlsx",
-    sheet_name="Platform Funding 2023",
-    header=0,
-    engine="openpyxl",
-    keep_default_na=False,
-)
-# Indiv_plat_fund_data["Funder_label"] = Indiv_plat_fund_data["Funder"].replace(" ", "<br>", regex=True)
-
-#Indiv_plat_fund_data["Fund_MSEK"] = Indiv_plat_fund_data["Funding"] / 1000
-
-
-def platform_fund_func(input):
+def platform_fund_func(input, vcol, fext):
     colours = np.array([""] * len(input["Platform"]), dtype=object)
-    for i in input["Funder"]:
-        colours[np.where(input["Funder"] == i)] = PLATFORM_FUNDING_COLOURS[str(i)]
+    for i in input["Name/type of financier"]:
+        colours[np.where(input["Name/type of financier"] == i)] = PLATFORM_FUNDING_COLOURS[str(i)]
 
     fig = go.Figure(
         go.Pie(
-            values=input["Fund_MSEK"],
-            labels=input["Funder_label"],
+            values=input[vcol],
+            labels=input["Name/type of financier"],
             hole=0.6,
             marker=dict(colors=colours, line=dict(color="#000000", width=1)),
             direction="clockwise",
@@ -40,17 +28,17 @@ def platform_fund_func(input):
     )
     fig.update_traces(
         textposition="outside",
-        texttemplate="%{label} (%{value:.1f}) ",
+        texttemplate="%{label} <br>(%{value:.1f}) ",
+        textfont=dict(family="Arial", size=32),
     )
 
     fig.update_layout(
         margin=dict(l=0, r=0, b=0, t=0),
-        font=dict(family="Arial", size=38),
         annotations=[
             dict(
                 showarrow=False,
-                text="{}".format(round(sum(input["Fund_MSEK"]), 1)),
-                font=dict(size=50),  # should work for all centre bits
+                text="{}".format(round(sum(input[vcol]), 1)),
+                font=dict(family="Arial", size=52),  # should work for all centre bits
                 x=0.5,
                 y=0.5,
             )
@@ -72,16 +60,26 @@ def platform_fund_func(input):
     #     )
     # )
     fig.write_image(
-        "Plots/Platform_fund_pies/{}.png".format(
-            input["Platform"][input["Platform"].first_valid_index()]
+        "Plots/Platform_fund_pies/{} {}.png".format(
+            input["Platform"][input["Platform"].first_valid_index()],
+            fext
         )
     )
 
+to_iterate = [
+    ("2024 with SciLifeLab funding", "2024 (MSEK)", "2024"),
+    ("2025–2028 with SciLifeLab fund", "2025–2028 (MSEK)", "2025-2028")
+    ]
 
-# platform_fund_func(
-#     Indiv_plat_fund_data[(Indiv_plat_fund_data["Platform"] == "Genomics")]
-# )
+for sname, vcol, fext in to_iterate:
+    Indiv_plat_fund_data = pd.read_excel(
+        "Data/Total Funding and User Fees per Platform-2.xlsx",
+        sheet_name=sname,
+        header=0,
+        engine="openpyxl",
+        keep_default_na=False,
+    )
 
-for z in Indiv_plat_fund_data["Platform"].unique():
-    print("Processing platform - {}".format(z))
-    platform_fund_func(Indiv_plat_fund_data[(Indiv_plat_fund_data["Platform"] == z)])
+    for z in Indiv_plat_fund_data["Platform"].unique():
+        print("Processing platform - {}".format(z))
+        platform_fund_func(Indiv_plat_fund_data[(Indiv_plat_fund_data["Platform"] == z)], vcol, fext)

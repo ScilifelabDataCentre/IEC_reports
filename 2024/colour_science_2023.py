@@ -4,6 +4,8 @@
 # This is the updated colour science code to reflect the
 # 2020 SciLifeLab visual ID.
 
+import numpy as np
+
 # Colourblind friendly colour sets - not typically used in reporting
 COLOURS = {
     1: ["#4477AA"],
@@ -138,6 +140,7 @@ PLATFORM_FUNDING_COLOURS = {
     "SciLifeLab Base": "#A7C947",
     "SciLifeLab Instrument": "#E5E5E5",
     "Universities": "#045C64",
+    "University": "#045C64",
     "VR": "#491F53",
     "KAW": "#4C979F",
     "Vinnova": "#D3E4A3",
