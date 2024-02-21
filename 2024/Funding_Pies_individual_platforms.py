@@ -73,7 +73,7 @@ to_iterate = [
 
 for sname, vcol, fext in to_iterate:
     Indiv_plat_fund_data = pd.read_excel(
-        "Data/Total Funding and User Fees per Platform-2.xlsx",
+        "Data/Total Funding and User Fees per Platform.xlsx",
         sheet_name=sname,
         header=0,
         engine="openpyxl",
