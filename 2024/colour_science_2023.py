@@ -139,6 +139,7 @@ PLATFORM_FUNDING_COLOURS = {
     "SciLifeLab": "#A7C947",
     "SciLifeLab Base": "#A7C947",
     "SciLifeLab Instrument": "#E5E5E5",
+    "SciLifeLab Instruments": "#E5E5E5",
     "Universities": "#045C64",
     "University": "#045C64",
     "VR": "#491F53",
